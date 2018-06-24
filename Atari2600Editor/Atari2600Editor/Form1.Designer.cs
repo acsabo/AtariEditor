@@ -31,6 +31,8 @@
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.panelTools = new System.Windows.Forms.Panel();
+            this.button5 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -76,9 +78,12 @@
             this.Column38 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column39 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column40 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button5 = new System.Windows.Forms.Button();
             this.Column41 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.button6 = new System.Windows.Forms.Button();
+            this.labelFGColor = new System.Windows.Forms.Label();
+            this.labelBKColor = new System.Windows.Forms.Label();
+            this.button7 = new System.Windows.Forms.Button();
             this.panelTools.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
@@ -106,6 +111,10 @@
             // 
             // panelTools
             // 
+            this.panelTools.Controls.Add(this.button7);
+            this.panelTools.Controls.Add(this.labelBKColor);
+            this.panelTools.Controls.Add(this.labelFGColor);
+            this.panelTools.Controls.Add(this.button6);
             this.panelTools.Controls.Add(this.button5);
             this.panelTools.Controls.Add(this.button4);
             this.panelTools.Controls.Add(this.button3);
@@ -119,6 +128,26 @@
             this.panelTools.Name = "panelTools";
             this.panelTools.Size = new System.Drawing.Size(152, 670);
             this.panelTools.TabIndex = 3;
+            // 
+            // button5
+            // 
+            this.button5.Location = new System.Drawing.Point(51, 124);
+            this.button5.Name = "button5";
+            this.button5.Size = new System.Drawing.Size(34, 23);
+            this.button5.TabIndex = 8;
+            this.button5.Text = "-";
+            this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
+            // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(13, 124);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(31, 23);
+            this.button4.TabIndex = 7;
+            this.button4.Text = "+";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // button3
             // 
@@ -442,30 +471,48 @@
             this.Column40.HeaderText = "40";
             this.Column40.Name = "Column40";
             // 
-            // button4
-            // 
-            this.button4.Location = new System.Drawing.Point(13, 124);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(31, 23);
-            this.button4.TabIndex = 7;
-            this.button4.Text = "+";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.button4_Click);
-            // 
-            // button5
-            // 
-            this.button5.Location = new System.Drawing.Point(51, 124);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(34, 23);
-            this.button5.TabIndex = 8;
-            this.button5.Text = "-";
-            this.button5.UseVisualStyleBackColor = true;
-            this.button5.Click += new System.EventHandler(this.button5_Click);
-            // 
             // Column41
             // 
             this.Column41.HeaderText = "CL";
             this.Column41.Name = "Column41";
+            // 
+            // button6
+            // 
+            this.button6.Location = new System.Drawing.Point(12, 189);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(75, 23);
+            this.button6.TabIndex = 9;
+            this.button6.Text = "Color";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
+            // 
+            // labelFGColor
+            // 
+            this.labelFGColor.AutoSize = true;
+            this.labelFGColor.Location = new System.Drawing.Point(94, 194);
+            this.labelFGColor.Name = "labelFGColor";
+            this.labelFGColor.Size = new System.Drawing.Size(35, 13);
+            this.labelFGColor.TabIndex = 10;
+            this.labelFGColor.Text = "label4";
+            // 
+            // labelBKColor
+            // 
+            this.labelBKColor.AutoSize = true;
+            this.labelBKColor.Location = new System.Drawing.Point(94, 221);
+            this.labelBKColor.Name = "labelBKColor";
+            this.labelBKColor.Size = new System.Drawing.Size(35, 13);
+            this.labelBKColor.TabIndex = 11;
+            this.labelBKColor.Text = "label5";
+            // 
+            // button7
+            // 
+            this.button7.Location = new System.Drawing.Point(13, 216);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(75, 23);
+            this.button7.TabIndex = 12;
+            this.button7.Text = "Background";
+            this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
             // Form1
             // 
@@ -539,6 +586,11 @@
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column41;
+        private System.Windows.Forms.Label labelBKColor;
+        private System.Windows.Forms.Label labelFGColor;
+        private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.ColorDialog colorDialog1;
+        private System.Windows.Forms.Button button7;
     }
 }
 

@@ -11,25 +11,7 @@ using System.Windows.Forms;
 
 namespace Atari2600Editor
 {
-    /*
-    partial class RowData
-    {
-        private Color color;
-        private int height;
 
-        public bool IsEmpty { get => Columns.Any(); }
-        public int Height { get => height; set => height = value; }
-        public Color Color { get => color; set => color = value; }
-        public SortedDictionary<int, object> Columns { get => columns; set => columns = value; }
-
-        private SortedDictionary<int, Object> columns;
-
-        public RowData(Color color)
-        {
-            this.Color = color;
-        }
-    }
-    */
     public partial class Form1 : Form
     {
         //int mouseX, mouseY;
@@ -47,6 +29,8 @@ namespace Atari2600Editor
 
         private Point initPoint;
         private const int ROW_HEIGHT = 4;
+        private Color backColor = Color.Black;
+        private Color frontColor = Color.Red;
 
         public Form1()
         {
@@ -57,14 +41,41 @@ namespace Atari2600Editor
         {
             clickedCells.Clear();
 
+            dataGridView1.DoubleBuffered(true);
+
             dataGridView1.Rows[0].Height = ROW_HEIGHT;
+/*
+            // Connect the virtual-mode events to event handlers. 
+            this.dataGridView1.CellValueNeeded += new
+                DataGridViewCellValueEventHandler(dataGridView1_CellValueNeeded);
+            this.dataGridView1.CellValuePushed += new
+                DataGridViewCellValueEventHandler(dataGridView1_CellValuePushed);
+            this.dataGridView1.NewRowNeeded += new
+                DataGridViewRowEventHandler(dataGridView1_NewRowNeeded);
+            this.dataGridView1.RowValidated += new
+                DataGridViewCellEventHandler(dataGridView1_RowValidated);
+            this.dataGridView1.RowDirtyStateNeeded += new
+                QuestionEventHandler(dataGridView1_RowDirtyStateNeeded);
+            this.dataGridView1.CancelRowEdit += new
+                QuestionEventHandler(dataGridView1_CancelRowEdit);
+            this.dataGridView1.UserDeletingRow += new
+                DataGridViewRowCancelEventHandler(dataGridView1_UserDeletingRow);
+
+            dataGridView1.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.EnableResizing; //or even better .DisableResizing. Most time consumption enum is DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders
+
+            // set it to false if not needed
+            dataGridView1.RowHeadersVisible = false;
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+*/
             for (int l = 0; l < 192; l++)
             {
                 DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[0].Clone();
-                //row.Height = 2;
-                
+                row.DefaultCellStyle.BackColor = Color.Black;
                 dataGridView1.Rows.Add(row);
             }
+
+//            dataGridView1.RowHeadersVisible = true;
+//            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
             //remove last row
             //dataGridView1.Rows.RemoveAt(0);
@@ -104,6 +115,41 @@ namespace Atari2600Editor
 
             tableLayoutPanel1.Invalidate();
             */
+        }
+
+        private void dataGridView1_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void dataGridView1_CancelRowEdit(object sender, QuestionEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void dataGridView1_RowDirtyStateNeeded(object sender, QuestionEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void dataGridView1_RowValidated(object sender, DataGridViewCellEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void dataGridView1_NewRowNeeded(object sender, DataGridViewRowEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void dataGridView1_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void dataGridView1_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
+        {
+            //throw new NotImplementedException();
         }
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
@@ -293,7 +339,7 @@ namespace Atari2600Editor
         {
             if (e.RowIndex > 0 && e.ColumnIndex >= 0)
             {
-                dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Style.BackColor = Color.Red;
+                dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Style.BackColor = frontColor;
             }
         }
 
@@ -321,7 +367,7 @@ namespace Atari2600Editor
                 var info = this.dataGridView1.HitTest(e.X, e.Y);
                 if (info.RowIndex > 0 && info.ColumnIndex >= 0)
                 {
-                    dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor = Color.Red;
+                    dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor = frontColor;
                 }
                 //Console.Write(info);
             }
@@ -368,6 +414,21 @@ namespace Atari2600Editor
             {
                 row.Height -= ROW_HEIGHT;
             }
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            colorDialog1.ShowDialog();
+            frontColor = colorDialog1.Color;
+            labelFGColor.BackColor = frontColor;
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            colorDialog1.ShowDialog();
+            backColor = colorDialog1.Color;
+            labelBKColor.BackColor = backColor;
+            dataGridView1.Rows[dataGridView1.CurrentCell.RowIndex].DefaultCellStyle.BackColor = backColor;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
@@ -15,16 +16,8 @@ namespace Atari2600Editor
 
     public partial class Form1 : Form
     {
-
-        //int mouseX, mouseY;
-
         bool canDraw;
-
-        //HashSet<Point> clickedCells = new HashSet<Point>();
         Dictionary<Point, int> clickedCells = new Dictionary<Point, int>();
-        //SortedDictionary<Point, int> clickedCells = new SortedDictionary<Point, int>();
-        //SortedDictionary<int, RowData> rolls = new SortedDictionary<int, RowData>();
-               
 
         bool fixedLine;
         bool mirrored;
@@ -35,15 +28,11 @@ namespace Atari2600Editor
         private Color frontColor = Color.Red;
 
         //------------------------------
-
         #region Constants
 
         private const int DefaultX = 6;
-
         private const int DefaultY = 6;
-
         private const int Spacing = 6;
-
         private const int CellSize = 24;
 
         #endregion
@@ -53,20 +42,15 @@ namespace Atari2600Editor
         private enum ColorSpace
         {
             Rgb = 0,
-
             Hsb = 1,
-
             Cmyk = 2,
-
             Lab = 7,
-
             Grayscale = 8
         }
 
         private enum FileVersion
         {
             Version1 = 1,
-
             Version2
         }
 
@@ -226,16 +210,12 @@ namespace Atari2600Editor
 
             return results;
         }
-
-
-
+        
         //------------------------------
         public Form1()
         {
-            //---
             _loadedPalette = this.ReadPhotoShopSwatchFile("data/Atari 128 (NTSC).aco");
 
-            //---------------------------------------------------
             InitializeComponent();
         }
 
@@ -246,77 +226,13 @@ namespace Atari2600Editor
             dataGridView1.DoubleBuffered(true);
 
             dataGridView1.Rows[0].Height = ROW_HEIGHT;
-/*
-            // Connect the virtual-mode events to event handlers. 
-            this.dataGridView1.CellValueNeeded += new
-                DataGridViewCellValueEventHandler(dataGridView1_CellValueNeeded);
-            this.dataGridView1.CellValuePushed += new
-                DataGridViewCellValueEventHandler(dataGridView1_CellValuePushed);
-            this.dataGridView1.NewRowNeeded += new
-                DataGridViewRowEventHandler(dataGridView1_NewRowNeeded);
-            this.dataGridView1.RowValidated += new
-                DataGridViewCellEventHandler(dataGridView1_RowValidated);
-            this.dataGridView1.RowDirtyStateNeeded += new
-                QuestionEventHandler(dataGridView1_RowDirtyStateNeeded);
-            this.dataGridView1.CancelRowEdit += new
-                QuestionEventHandler(dataGridView1_CancelRowEdit);
-            this.dataGridView1.UserDeletingRow += new
-                DataGridViewRowCancelEventHandler(dataGridView1_UserDeletingRow);
 
-            dataGridView1.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.EnableResizing; //or even better .DisableResizing. Most time consumption enum is DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders
-
-            // set it to false if not needed
-            dataGridView1.RowHeadersVisible = false;
-            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-*/
             for (int l = 0; l < 192; l++)
             {
                 DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[0].Clone();
                 row.DefaultCellStyle.BackColor = Color.Black;
                 dataGridView1.Rows.Add(row);
             }
-
-//            dataGridView1.RowHeadersVisible = true;
-//            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-
-            //remove last row
-            //dataGridView1.Rows.RemoveAt(0);
-
-            /*
-            tableLayoutPanel1.RowCount = 40;// 192;
-            tableLayoutPanel1.ColumnCount = 40;
-
-            tableLayoutPanel1.ColumnStyles.Clear();
-
-            for (int l = 0; l < 40; l++)
-            {
-                tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.AutoSize, 3));
-
-                for (int c = 0; c < 40; c++)
-                {
-                    tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, 5));
-                    Label label = new Label();
-                    label.Dock = DockStyle.Fill;
-                    label.Text = "x";
-                    label.Size = new Size(new Point(15, 15));
-
-                    if (l % 2 == 0)
-                        label.BackColor = Color.Red;
-                    else
-                        label.BackColor = Color.Gray;
-
-                    label.ForeColor = Color.Blue;
-
-                    //label.Padding = new Padding(0);
-                    //label.Margin = new Padding(0);
-
-                                       
-                    tableLayoutPanel1.Controls.Add(label, c, l);
-                }
-            }           
-
-            tableLayoutPanel1.Invalidate();
-            */
         }
 
         private void dataGridView1_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
@@ -381,147 +297,34 @@ namespace Atari2600Editor
 
         private void tableLayoutPanel1_MouseDown(object sender, MouseEventArgs e)
         {
-/*
-            var pt = new Point(e.X, e.Y);
-
-            var colWidths = this.tableLayoutPanel1.GetColumnWidths();
-            var rowHeights = this.tableLayoutPanel1.GetRowHeights();
-
-            int col = -1, row = -1;
-            int offset = 0;
-            for (int iCol = 0; iCol < this.tableLayoutPanel1.ColumnCount; ++iCol)
-            {
-                if (pt.X >= offset && pt.X <= (offset + colWidths[iCol]))
-                {
-                    col = iCol;
-                    break;
-                }
-
-                offset += colWidths[iCol];
-            }
-
-            offset = 0;
-            for (int iRow = 0; iRow < this.tableLayoutPanel1.RowCount; ++iRow)
-            {
-                if (pt.Y >= offset && pt.Y <= (offset + rowHeights[iRow]))
-                {
-                    row = iRow;
-                    break;
-                }
-
-                offset += rowHeights[iRow];
-            }
-
-            //MessageBox.Show(String.Format("row = {0}, col = {1}", row, col));
-            var cell = new Point(col, row);
-            clickedCells[cell] = 1;
-
-            if (mirrored)
-            {
-                cell = new Point(39 - col, row);
-                clickedCells[cell] = 1;
-            }
-            //if (!clickedCells.Contains(pt)) clickedCells.Add(pt);
-            tableLayoutPanel1.Invalidate();
-
-            initPoint = cell;
-*/
         }
 
         private void tableLayoutPanel1_Paint_1(object sender, PaintEventArgs e)
         {
-
         }
 
         private void tableLayoutPanel1_CellPaint(object sender, TableLayoutCellPaintEventArgs e)
         {
-            /*
-            if (clickedCells.Any())
-            //if (clickedCells.Contains(new Point(e.Column, e.Row)))
-             //   if (e.Column == 10 && e.Row == 10)
-            {
-                //if (clickedCells[0].X == e.Column && clickedCells[0].Y == e.Row)
-                if (clickedCells.ContainsKey(new Point(e.Column, e.Row)))
-                {
-                    e.Graphics.FillRectangle(Brushes.Red, e.CellBounds);
-                }
-            }
-            */
         }
 
         private void tableLayoutPanel1_MouseMove(object sender, MouseEventArgs e)
         {
-/*
-            var pt = new Point(e.X, e.Y);
-
-            var colWidths = this.tableLayoutPanel1.GetColumnWidths();
-            var rowHeights = this.tableLayoutPanel1.GetRowHeights();
-
-            int col = -1, row = -1;
-            int offset = 0;
-            for (int iCol = 0; iCol < this.tableLayoutPanel1.ColumnCount; ++iCol)
-            {
-                if (pt.X >= offset && pt.X <= (offset + colWidths[iCol]))
-                {
-                    col = iCol;
-                    break;
-                }
-
-                offset += colWidths[iCol];
-            }
-
-            offset = 0;
-            for (int iRow = 0; iRow < this.tableLayoutPanel1.RowCount; ++iRow)
-            {
-                if (pt.Y >= offset && pt.Y <= (offset + rowHeights[iRow]))
-                {
-                    row = iRow;
-                    break;
-                }
-
-                offset += rowHeights[iRow];
-            }
-
-            //MessageBox.Show(String.Format("row = {0}, col = {1}", row, col));
-            var cell = new Point(col, row);
-           // if (!clickedCells.Contains(cell)) clickedCells.Add(cell);
-
-            if (fixedLine)
-            {
-                cell.Y = initPoint.Y;
-            }
-
-            clickedCells[cell] = 1;
-
-            if (mirrored)
-            {
-                cell = new Point(39-col, cell.Y);
-                clickedCells[cell] = 1;
-            }
-            //if (!clickedCells.Contains(pt)) clickedCells.Add(pt);
-            tableLayoutPanel1.Invalidate();
-            label3.Text = "total: " + clickedCells.Count;
-*/
         }
 
         private void tableLayoutPanel1_MouseUp(object sender, MouseEventArgs e)
         {
-
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
-        {
-            
+        {            
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e)
-        {
-         
+        {         
         }
 
         private void tableLayoutPanel1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -531,10 +334,6 @@ namespace Atari2600Editor
 
         private void button2_Click(object sender, EventArgs e)
         {
-            //Control control = tableLayoutPanel1.GetControlFromPosition(0, 0);
-            //tableLayoutPanel1.Controls.Remove(control);
-            //tableLayoutPanel1.RowStyles[0].Height = 20;
-
         }
 
         private void dataGridView1_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -542,6 +341,7 @@ namespace Atari2600Editor
             if (e.RowIndex > 0 && e.ColumnIndex >= 0)
             {
                 dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Style.BackColor = frontColor;
+                dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Tag = 1;
             }
         }
 
@@ -570,12 +370,10 @@ namespace Atari2600Editor
                 if (info.RowIndex > 0 && info.ColumnIndex >= 0)
                 {
                     dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor = frontColor;
+                    dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Tag = 1;
                 }
-                //Console.Write(info);
             }
         }
-
-
 
         private void dataGridView1_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
         {
@@ -585,7 +383,6 @@ namespace Atari2600Editor
         {
         }
 
-        //--------------------
         private void dataGridView1_MouseDown(object sender, MouseEventArgs e)
         {
             canDraw = true;
@@ -603,10 +400,8 @@ namespace Atari2600Editor
 
         private void button4_Click(object sender, EventArgs e)
         {
-
             DataGridViewRow row = (DataGridViewRow)dataGridView1.CurrentRow;
-            row.Height += ROW_HEIGHT;
-            
+            row.Height += ROW_HEIGHT;            
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -639,6 +434,7 @@ namespace Atari2600Editor
 
                 e.Graphics.Clear(bufferedPanel1.BackColor);
 
+                int index = 0;
                 foreach (Color color in _loadedPalette)
                 {
                     Rectangle bounds;
@@ -654,6 +450,10 @@ namespace Atari2600Editor
                     label.Location = new Point(x, y);
                     label.Size = new Size(new Point((CellSize + DefaultX), (CellSize + DefaultX)));
                     label.BackColor = color;
+                    
+                    //store the color index
+                    label.Tag = index++;
+
                     label.MouseClick += new MouseEventHandler(labelColor_MouseClick);
                     bufferedPanel1.Controls.Add(label);
 
@@ -667,6 +467,11 @@ namespace Atari2600Editor
             }
         }
 
+        private string ToHex(int value)
+        {
+            return String.Format("0x{0:X2}", value);
+        }
+
         private void labelColor_MouseClick(object sender, MouseEventArgs e)
         {
             Label labelColor = (Label)sender;
@@ -677,6 +482,16 @@ namespace Atari2600Editor
                 case MouseButtons.Left:
                     frontColor = labelColor.BackColor;
                     labelFGColor.BackColor = frontColor;
+                    if (dataGridView1.CurrentCell != null)
+                    {
+                        DataGridViewRow row = dataGridView1.Rows[dataGridView1.CurrentCell.RowIndex];
+                        foreach (DataGridViewCell cell in row.Cells) {
+                            if (cell.Tag != null && (int)cell.Tag == 1)
+                            {
+                                cell.Style.BackColor = frontColor;
+                            }
+                        }
+                    }
                     break;
 
                 case MouseButtons.Right:
@@ -688,6 +503,14 @@ namespace Atari2600Editor
                     break;
             }
 
+            Debug.WriteLine(" = " + labelColor.BackColor);
+
+            // Store integer 182
+            int intValue = (int)labelColor.Tag;
+            // Convert integer 182 as a hex in a string variable
+            string hexValue = ToHex(intValue);
+
+            Debug.WriteLine("intValue = " + intValue + "hexValue = " + hexValue);
         }
 
         private void bufferedPanel1_MouseClick(object sender, MouseEventArgs e)
@@ -698,6 +521,30 @@ namespace Atari2600Editor
         private void labelFGColor_MouseClick(object sender, MouseEventArgs e)
         {
 
+        }
+
+        private void dataGridView1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '+')
+            {
+                //DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[dataGridView1.CurrentRow.Index].Clone();
+                //row.DefaultCellStyle.BackColor = Color.Black;
+                dataGridView1.Rows.Insert(dataGridView1.CurrentRow.Index+1);
+            }
+            if (e.KeyChar == '-')
+            {
+                DataGridViewRow row = (DataGridViewRow)dataGridView1.CurrentRow;
+                row.DefaultCellStyle.BackColor = Color.Black;
+                dataGridView1.Rows.Remove(row);
+            }
+        }
+
+        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Shift && (e.KeyCode == Keys.Down || e.KeyCode == Keys.Up || e.KeyCode == Keys.Right || e.KeyCode == Keys.Left))
+            {
+                dataGridView1.CurrentCell.Style.BackColor = frontColor;
+            }
         }
     }
 }

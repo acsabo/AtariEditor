@@ -42,6 +42,12 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
+            this.bufferedPanel1 = new PhotoShopColorSwatchLoader.BufferedPanel();
+            this.panelLeft = new System.Windows.Forms.Panel();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -82,13 +88,6 @@
             this.Column38 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column39 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column40 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column41 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
-            this.bufferedPanel1 = new PhotoShopColorSwatchLoader.BufferedPanel();
-            this.panelLeft = new System.Windows.Forms.Panel();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.panelTools.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panelLeft.SuspendLayout();
@@ -269,8 +268,7 @@
             this.Column37,
             this.Column38,
             this.Column39,
-            this.Column40,
-            this.Column41});
+            this.Column40});
             this.dataGridView1.Cursor = System.Windows.Forms.Cursors.Cross;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
@@ -308,12 +306,43 @@
             this.dataGridView1.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseEnter);
             this.dataGridView1.CellMouseMove += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseMove);
             this.dataGridView1.CellMouseUp += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseUp);
+            this.dataGridView1.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_RowHeaderMouseDoubleClick);
             this.dataGridView1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridView1_KeyDown);
             this.dataGridView1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.dataGridView1_KeyPress);
             this.dataGridView1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseDown);
             this.dataGridView1.MouseHover += new System.EventHandler(this.dataGridView1_MouseHover);
             this.dataGridView1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseMove);
             this.dataGridView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseUp);
+            // 
+            // bufferedPanel1
+            // 
+            this.bufferedPanel1.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.bufferedPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.bufferedPanel1.Location = new System.Drawing.Point(0, 251);
+            this.bufferedPanel1.Name = "bufferedPanel1";
+            this.bufferedPanel1.Size = new System.Drawing.Size(255, 500);
+            this.bufferedPanel1.TabIndex = 13;
+            this.bufferedPanel1.Paint += new System.Windows.Forms.PaintEventHandler(this.bufferedPanel1_Paint);
+            this.bufferedPanel1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.bufferedPanel1_MouseClick);
+            // 
+            // panelLeft
+            // 
+            this.panelLeft.Controls.Add(this.bufferedPanel1);
+            this.panelLeft.Controls.Add(this.panelTools);
+            this.panelLeft.Dock = System.Windows.Forms.DockStyle.Left;
+            this.panelLeft.Location = new System.Drawing.Point(0, 0);
+            this.panelLeft.Name = "panelLeft";
+            this.panelLeft.Size = new System.Drawing.Size(255, 751);
+            this.panelLeft.TabIndex = 4;
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.dataGridView1);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(255, 0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(985, 751);
+            this.panel1.TabIndex = 5;
             // 
             // Column1
             // 
@@ -515,41 +544,6 @@
             this.Column40.HeaderText = "40";
             this.Column40.Name = "Column40";
             // 
-            // Column41
-            // 
-            this.Column41.HeaderText = "CL";
-            this.Column41.Name = "Column41";
-            // 
-            // bufferedPanel1
-            // 
-            this.bufferedPanel1.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.bufferedPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.bufferedPanel1.Location = new System.Drawing.Point(0, 251);
-            this.bufferedPanel1.Name = "bufferedPanel1";
-            this.bufferedPanel1.Size = new System.Drawing.Size(255, 500);
-            this.bufferedPanel1.TabIndex = 13;
-            this.bufferedPanel1.Paint += new System.Windows.Forms.PaintEventHandler(this.bufferedPanel1_Paint);
-            this.bufferedPanel1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.bufferedPanel1_MouseClick);
-            // 
-            // panelLeft
-            // 
-            this.panelLeft.Controls.Add(this.bufferedPanel1);
-            this.panelLeft.Controls.Add(this.panelTools);
-            this.panelLeft.Dock = System.Windows.Forms.DockStyle.Left;
-            this.panelLeft.Location = new System.Drawing.Point(0, 0);
-            this.panelLeft.Name = "panelLeft";
-            this.panelLeft.Size = new System.Drawing.Size(255, 751);
-            this.panelLeft.TabIndex = 4;
-            // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.dataGridView1);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(255, 0);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(985, 751);
-            this.panel1.TabIndex = 5;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -580,6 +574,17 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.Button button5;
+        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Label labelBKColor;
+        private System.Windows.Forms.Label labelFGColor;
+        private System.Windows.Forms.ColorDialog colorDialog1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker2;
+        private PhotoShopColorSwatchLoader.BufferedPanel bufferedPanel1;
+        private System.Windows.Forms.Panel panelLeft;
+        private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
@@ -620,18 +625,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column38;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column39;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column40;
-        private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column41;
-        private System.Windows.Forms.Label labelBKColor;
-        private System.Windows.Forms.Label labelFGColor;
-        private System.Windows.Forms.ColorDialog colorDialog1;
-        private System.ComponentModel.BackgroundWorker backgroundWorker1;
-        private System.ComponentModel.BackgroundWorker backgroundWorker2;
-        private PhotoShopColorSwatchLoader.BufferedPanel bufferedPanel1;
-        private System.Windows.Forms.Panel panelLeft;
-        private System.Windows.Forms.Panel panel1;
     }
 }
 

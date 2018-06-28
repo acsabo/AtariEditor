@@ -19,23 +19,27 @@ namespace Atari2600Editor
         bool canDraw;
         Dictionary<Point, int> clickedCells = new Dictionary<Point, int>();
 
-        bool fixedLine;
-        bool mirrored;
-
-        private Point initPoint;
         private const int ROW_HEIGHT = 4;
-        //private Color backColor = Color.Black;
-        //private Color frontColor = Color.Red;
 
         private enum RowType { Asymmetric, Symmetric, Repeatable };
 
         private class ScanlineInfo
         {
             public Color backColor;
+            public byte backColorIndex;
+
             public Color frontColor;
-            public int repeat = 2;
+            public byte frontColorIndex;
+
+            public byte repeat = 2;
             public RowType type;
         }
+
+        private Color defaultBackColor = Color.Black;
+        private byte defaultBackColorIndex;
+
+        private Color defaultFrontColor = Color.Red;        
+        private byte defaultFrontColorIndex;
 
         //------------------------------
         #region Constants
@@ -48,6 +52,8 @@ namespace Atari2600Editor
         #endregion
 
         private List<Color> _loadedPalette;
+
+        public bool erasure { get; private set; }
 
         private enum ColorSpace
         {
@@ -64,21 +70,11 @@ namespace Atari2600Editor
             Version2
         }
 
-        /// <summary>
-        /// Reads a 16bit unsigned integer in big-endian format.
-        /// </summary>
-        /// <param name="stream">The stream to read the data from.</param>
-        /// <returns>The unsigned 16bit integer cast to an <c>Int32</c>.</returns>
         private int ReadInt16(Stream stream)
         {
             return (stream.ReadByte() << 8) | (stream.ReadByte() << 0);
         }
-
-        /// <summary>
-        /// Reads a 32bit unsigned integer in big-endian format.
-        /// </summary>
-        /// <param name="stream">The stream to read the data from.</param>
-        /// <returns>The unsigned 32bit integer cast to an <c>Int32</c>.</returns>
+        
         private int ReadInt32(Stream stream)
         {
             return ((byte)stream.ReadByte() << 24) | ((byte)stream.ReadByte() << 16) | ((byte)stream.ReadByte() << 8) | ((byte)stream.ReadByte() << 0);
@@ -116,12 +112,6 @@ namespace Atari2600Editor
             return colorPalette;
         }
 
-        /// <summary>
-        /// Reads a unicode string of the specified length.
-        /// </summary>
-        /// <param name="stream">The stream to read the data from.</param>
-        /// <param name="length">The number of characters in the string.</param>
-        /// <returns>The string read from the stream.</returns>
         private string ReadString(Stream stream, int length)
         {
             byte[] buffer;
@@ -220,7 +210,7 @@ namespace Atari2600Editor
 
             return results;
         }
-        
+
         //------------------------------
         public Form1()
         {
@@ -229,7 +219,7 @@ namespace Atari2600Editor
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void buttonNew_Click(object sender, EventArgs e)
         {
             clickedCells.Clear();
 
@@ -241,7 +231,7 @@ namespace Atari2600Editor
 
             for (int l = 0; l < 192; l++)
             {
-                DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[0].Clone();          
+                DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[0].Clone();
                 addScanlineInfoTo(row);
                 dataGridView1.Rows.Add(row);
                 row.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
@@ -254,77 +244,15 @@ namespace Atari2600Editor
         {
             //store line info
             ScanlineInfo scanLine = new ScanlineInfo();
-            scanLine.frontColor = Color.Red;
-            scanLine.backColor = Color.Black;
+            scanLine.frontColor = Color.Empty;// Color.Red;
+            scanLine.backColor = Color.Empty;
             scanLine.repeat = 1;
             scanLine.type = RowType.Asymmetric;
             row.Tag = scanLine;
             row.DefaultCellStyle.BackColor = scanLine.backColor;
         }
 
-        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
-        {
-
-        }
-
-        private void pictureBox1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
-        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
-        {
-            
-        }
-
-        private void pictureBox1_MouseHover(object sender, EventArgs e)
-        {
-
-        }
-
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
-        private void tableLayoutPanel1_MouseDown(object sender, MouseEventArgs e)
-        {
-        }
-
-        private void tableLayoutPanel1_Paint_1(object sender, PaintEventArgs e)
-        {
-        }
-
-        private void tableLayoutPanel1_CellPaint(object sender, TableLayoutCellPaintEventArgs e)
-        {
-        }
-
-        private void tableLayoutPanel1_MouseMove(object sender, MouseEventArgs e)
-        {
-        }
-
-        private void tableLayoutPanel1_MouseUp(object sender, MouseEventArgs e)
-        {
-        }
-
-        private void Form1_KeyDown(object sender, KeyEventArgs e)
-        {            
-        }
-
-        private void Form1_KeyUp(object sender, KeyEventArgs e)
-        {         
-        }
-
-        private void tableLayoutPanel1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
-        {
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            mirrored = !mirrored;
-        }
-
-        private void button2_Click(object sender, EventArgs e)
+        private void buttonSave_Click(object sender, EventArgs e)
         {
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
@@ -336,11 +264,33 @@ namespace Atari2600Editor
                     byte pf2 = extractBitsFrom(row.Cells, 12, 19);
                     //second half if needed
 
-                    // Convert integer 182 as a hex in a string variable
-                    string hexValue = ".byte " + ToHex(pf0) + "," + ToHex(pf1) + "," + ToHex(pf2) + ";";
-                    string binValue = ".byte " + ToBin(pf0) + "," + ToBin(pf1) + "," + ToBin(pf2) + ";";
+                    byte bkColor = scanlineInfo.backColorIndex;
+                    byte fgColor = scanlineInfo.frontColorIndex;
+                    byte height = scanlineInfo.repeat;
+                    string prefix = ToHex(height) + "," + ToHex(bkColor) + "," + ToHex(fgColor);
 
-                    Debug.WriteLine("hexValue = " + hexValue +" --- binValue = " + binValue);
+                    // Convert integer 182 as a hex in a string variable
+                    string hexValue1 = ".byte " + ToHex(pf0) + "," + ToHex(pf1) + "," + ToHex(pf2) + ";";
+                    string binValue1 = ".byte " + ToBin(pf0) + "," + ToBin(pf1) + "," + ToBin(pf2) + ";";
+                    string hexPlainValue1 = "hex  " + ToHex2(pf0) + "" + ToHex2(pf1) + "" + ToHex2(pf2) + "";
+
+                    if (true) //RowType.Asymmetric == scanlineInfo.type)
+                    {
+                        pf0 = extractBitsFrom(row.Cells, 20, 23);
+                        pf1 = extractBitsFrom(row.Cells, 24, 31);
+                        pf2 = extractBitsFrom(row.Cells, 32, 39);
+
+                        string hexValue2 = "," + ToHex(pf0) + "," + ToHex(pf1) + "," + ToHex(pf2) + ";";
+                        string binValue2 = "," + ToBin(pf0) + "," + ToBin(pf1) + "," + ToBin(pf2) + ";";
+                        string hexPlainValue2 = "" + ToHex2(pf0) + "" + ToHex2(pf1) + "" + ToHex2(pf2) + "";
+                        Debug.WriteLine("hexValue = " + hexValue1 + hexValue2 + " --- binValue = " + binValue1 + binValue2 + "hexPlainValue = " + hexPlainValue1 + hexPlainValue2);
+                    }
+                    else
+                    {
+                        Debug.WriteLine("hexValue = " + hexValue1 + " --- binValue = " + binValue1 + "hexPlainValue = " + hexPlainValue1);
+                    }
+
+                    Debug.WriteLine(prefix);
                 }
 
             }
@@ -348,14 +298,14 @@ namespace Atari2600Editor
         }
 
         private byte extractBitsFrom(DataGridViewCellCollection cells, int v1, int v2)
-        { 
+        {
             byte data = 0;
             string bits = "";
             for (int i = v1; i <= v2; i++)
             {
                 if (cells[i].Tag != null && ((int)cells[i].Tag == 1))
                 {
-                    bits += "1";                   
+                    bits += "1";
                 }
                 else
                 {
@@ -363,7 +313,7 @@ namespace Atari2600Editor
                 }
             }
             //Debug.WriteLine("bits = " + bits + "["+v1+","+v2+"]");
-            data = Convert.ToByte(bits,2);
+            data = Convert.ToByte(bits, 2);
             return data;
         }
 
@@ -372,11 +322,23 @@ namespace Atari2600Editor
          */
         private void drawPixelAt(int line, int row)
         {
-            ScanlineInfo scanlineInfo = (ScanlineInfo) dataGridView1.Rows[line].Tag;
+            ScanlineInfo scanlineInfo = (ScanlineInfo)dataGridView1.Rows[line].Tag;
             if (scanlineInfo != null)
             {
-                dataGridView1.Rows[line].Cells[row].Style.BackColor = scanlineInfo.frontColor;
-                dataGridView1.Rows[line].Cells[row].Tag = 1;
+                if (scanlineInfo.frontColor == Color.Empty)
+                {
+                    scanlineInfo.frontColor = defaultFrontColor;
+                }
+                
+                if (erasure)
+                {
+                    dataGridView1.Rows[line].Cells[row].Tag = 0;
+                    dataGridView1.Rows[line].Cells[row].Style.BackColor = scanlineInfo.backColor;
+                }
+                else { 
+                    dataGridView1.Rows[line].Cells[row].Tag = 1;
+                    dataGridView1.Rows[line].Cells[row].Style.BackColor = scanlineInfo.frontColor;
+                }
             }
         }
 
@@ -385,8 +347,22 @@ namespace Atari2600Editor
             ScanlineInfo scanlineInfo = (ScanlineInfo)dataGridView1.Rows[cell.RowIndex].Tag;
             if (scanlineInfo != null)
             {
+                if (scanlineInfo.frontColor == Color.Empty)
+                {
+                    scanlineInfo.frontColor = defaultFrontColor;
+                }
                 cell.Style.BackColor = scanlineInfo.frontColor;
-                cell.Tag = 1;
+
+                if (erasure)
+                {
+                    cell.Tag = 0;
+                    cell.Style.BackColor = scanlineInfo.backColor;
+                }
+                else
+                {
+                    cell.Tag = 1;
+                    cell.Style.BackColor = scanlineInfo.frontColor;
+                }
             }
         }
 
@@ -394,25 +370,17 @@ namespace Atari2600Editor
         {
             if (e.RowIndex > 0 && e.ColumnIndex >= 0)
             {
-                drawPixelAt(e.RowIndex, e.ColumnIndex);
+                switch (e.Button)
+                {
+                    case MouseButtons.Left:
+                        drawPixelAt(e.RowIndex, e.ColumnIndex);
+                        break;
+                    case MouseButtons.Right:
+                        dataGridView1.CurrentCell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                        drawBackground(e.RowIndex);
+                        break;
+                }
             }
-        }
-
-        private void dataGridView1_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
-        {            
-        }
-
-        private void dataGridView1_CellMouseUp(object sender, DataGridViewCellMouseEventArgs e)
-        {            
-        }
-
-        private void dataGridView1_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
-        {
-        }
-
-
-        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
-        {
         }
 
         private void dataGridView1_MouseMove(object sender, MouseEventArgs e)
@@ -422,17 +390,18 @@ namespace Atari2600Editor
                 var info = this.dataGridView1.HitTest(e.X, e.Y);
                 if (info.RowIndex > 0 && info.ColumnIndex >= 0)
                 {
-                    drawPixelAt(info.RowIndex, info.ColumnIndex);
+                    switch (e.Button)
+                    {
+                        case MouseButtons.Left:
+                            drawPixelAt(info.RowIndex, info.ColumnIndex);
+                            break;
+                        case MouseButtons.Right:
+                            dataGridView1.CurrentCell = dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex];
+                            drawBackground(info.RowIndex);
+                            break;
+                    }
                 }
             }
-        }
-
-        private void dataGridView1_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
-        {
-        }
-
-        private void dataGridView1_MouseHover(object sender, EventArgs e)
-        {
         }
 
         private void dataGridView1_MouseDown(object sender, MouseEventArgs e)
@@ -445,153 +414,13 @@ namespace Atari2600Editor
             canDraw = false;
         }
 
-        private void Form1_Activated(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            DataGridViewRow row = (DataGridViewRow)dataGridView1.CurrentRow;
-            row.Height += ROW_HEIGHT;            
-        }
-
-        private void button5_Click(object sender, EventArgs e)
-        {
-            DataGridViewRow row = (DataGridViewRow)dataGridView1.CurrentRow;
-            if (row.Height > 0)
-            {
-                row.Height -= ROW_HEIGHT;
-            }
-        }
-
-        private void button6_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button7_Click(object sender, EventArgs e)
-        {
-        }
-
-        private void bufferedPanel1_Paint(object sender, PaintEventArgs e)
-        {
-            if (_loadedPalette != null)
-            {
-                int x;
-                int y;
-
-                x = DefaultX;
-                y = DefaultY;
-
-                e.Graphics.Clear(bufferedPanel1.BackColor);
-
-                int index = 0;
-                foreach (Color color in _loadedPalette)
-                {
-                    Rectangle bounds;
-
-                    if (x > bufferedPanel1.Width - (CellSize + DefaultX))
-                    {
-                        x = DefaultX;
-                        y += DefaultY + CellSize + Spacing;
-                    }
-
-                    bounds = new Rectangle(x, y, CellSize, CellSize);
-                    Label label = new Label();
-                    label.Location = new Point(x, y);
-                    label.Size = new Size(new Point((CellSize + DefaultX), (CellSize + DefaultX)));
-                    label.BackColor = color;
-                    
-                    //store the color index
-                    label.Tag = index++;
-
-                    label.MouseClick += new MouseEventHandler(labelColor_MouseClick);
-                    bufferedPanel1.Controls.Add(label);
-
-                    using (Brush brush = new SolidBrush(color))
-                        e.Graphics.FillRectangle(brush, bounds);
-
-                    e.Graphics.DrawRectangle(Pens.Black, bounds);
-
-                    x += (CellSize + Spacing);
-                }
-            }
-        }
-
-        private string ToHex(byte value)
-        {
-            //return String.Format("0x{0:X2}", value);
-            return String.Format("#${0:X2}", value);
-        }
-
-        private string ToBin(byte value)
-        {
-            //return String.Format("0x{0:X2}", value);
-            return Convert.ToString(value, 2).PadLeft(8, '0');
-        }
-
-        private void labelColor_MouseClick(object sender, MouseEventArgs e)
-        {
-            Label labelColor = (Label)sender;
-
-            switch (e.Button)
-            {
-
-                case MouseButtons.Left:
-                    {
-                        labelFGColor.BackColor = labelColor.BackColor; 
-                        if (dataGridView1.CurrentCell != null)
-                        {
-                            DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[dataGridView1.CurrentCell.RowIndex];
-                            ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
-                            scanlineInfo.frontColor = labelColor.BackColor;
-                            foreach (DataGridViewCell cell in row.Cells)
-                            {
-                                if (cell.Tag != null && (int)cell.Tag == 1)
-                                {
-                                    drawPixelAt(cell);
-                                }
-                            }
-                        }
-                        break;
-                    }
-
-                case MouseButtons.Right:
-                    {
-                        labelBKColor.BackColor = labelColor.BackColor;
-
-                        DataGridViewRow row = dataGridView1.Rows[dataGridView1.CurrentCell.RowIndex];
-                        ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
-                        scanlineInfo.backColor = labelColor.BackColor;
-                        if (dataGridView1.CurrentCell != null)
-                        {
-                            dataGridView1.Rows[dataGridView1.CurrentCell.RowIndex].DefaultCellStyle.BackColor = scanlineInfo.backColor;
-                        }
-                        break;
-                    }
-            }
-
-            Debug.WriteLine(" = " + labelColor.BackColor);
-        }
-
-        private void bufferedPanel1_MouseClick(object sender, MouseEventArgs e)
-        {
-
-        }
-
-        private void labelFGColor_MouseClick(object sender, MouseEventArgs e)
-        {
-
-        }
-
         private void dataGridView1_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == '+')
             {
                 //DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[dataGridView1.CurrentRow.Index].Clone();
                 //row.DefaultCellStyle.BackColor = Color.Black;
-                dataGridView1.Rows.Insert(dataGridView1.CurrentRow.Index+1);
+                dataGridView1.Rows.Insert(dataGridView1.CurrentRow.Index + 1);
                 addScanlineInfoTo(dataGridView1.CurrentRow);
             }
             if (e.KeyChar == '-')
@@ -620,6 +449,159 @@ namespace Atari2600Editor
                 scanlineInfo.type = RowType.Asymmetric;
             }
             Debug.WriteLine("scanlineInfo.type = " + scanlineInfo.type);
+        }
+
+        private void buttonIncRowHeight_Click(object sender, EventArgs e)
+        {
+            DataGridViewRow row = (DataGridViewRow)dataGridView1.CurrentRow;
+            ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
+            if (scanlineInfo != null)
+            {
+                scanlineInfo.repeat++;
+                row.Height += ROW_HEIGHT;
+            }
+        }
+
+        private void buttonDecRowHeight_Click(object sender, EventArgs e)
+        {
+            DataGridViewRow row = (DataGridViewRow)dataGridView1.CurrentRow;
+            ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
+            if (scanlineInfo != null && row.Height > 0)
+            {
+                scanlineInfo.repeat--;
+                row.Height -= ROW_HEIGHT;
+            }
+        }
+
+        private void bufferedPanelColorPalette_Paint(object sender, PaintEventArgs e)
+        {
+            if (_loadedPalette != null)
+            {
+                int x;
+                int y;
+
+                x = DefaultX;
+                y = DefaultY;
+
+                e.Graphics.Clear(bufferedPanel1.BackColor);
+
+                byte index = 0;
+                foreach (Color color in _loadedPalette)
+                {
+                    Rectangle bounds;
+
+                    if (x > bufferedPanel1.Width - (CellSize + DefaultX))
+                    {
+                        x = DefaultX;
+                        y += DefaultY + CellSize + Spacing;
+                    }
+
+                    bounds = new Rectangle(x, y, CellSize, CellSize);
+                    Label label = new Label();
+                    label.Location = new Point(x, y);
+                    label.Size = new Size(new Point((CellSize + DefaultX), (CellSize + DefaultX)));
+                    label.BackColor = color;
+
+                    //store the color index
+                    label.Tag = index++;
+
+                    label.MouseClick += new MouseEventHandler(labelColor_MouseClick);
+                    bufferedPanel1.Controls.Add(label);
+
+                    using (Brush brush = new SolidBrush(color))
+                        e.Graphics.FillRectangle(brush, bounds);
+
+                    e.Graphics.DrawRectangle(Pens.Black, bounds);
+
+                    x += (CellSize + Spacing);
+                }
+            }
+        }
+
+        private string ToHex(byte value)
+        {
+            //return String.Format("0x{0:X2}", value);
+            return String.Format("#${0:X2}", value);
+        }
+
+        private string ToHex2(byte value)
+        {
+            return String.Format("{0:X2}", value);
+        }
+
+        private string ToBin(byte value)
+        {
+            //return String.Format("0x{0:X2}", value);
+            return "#%" + Convert.ToString(value, 2).PadLeft(8, '0');
+        }
+
+        private void labelColor_MouseClick(object sender, MouseEventArgs e)
+        {
+            Label labelColor = (Label)sender;
+
+            switch (e.Button)
+            {
+                case MouseButtons.Left:
+                    {
+                        labelFGColor.BackColor = labelColor.BackColor;
+
+                        //default color
+                        defaultFrontColor = labelFGColor.BackColor;
+                        defaultFrontColorIndex = (byte)labelColor.Tag;
+
+                        if (dataGridView1.CurrentCell != null)
+                        {
+                            DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[dataGridView1.CurrentCell.RowIndex];
+                            ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
+                            scanlineInfo.frontColor = labelColor.BackColor;
+                            //save color index
+                            scanlineInfo.frontColorIndex = (byte)labelColor.Tag;
+                            foreach (DataGridViewCell cell in row.Cells)
+                            {
+                                if (cell.Tag != null && (int)cell.Tag == 1)
+                                {
+                                    drawPixelAt(cell);
+                                }
+                            }
+                        }
+                        break;
+                    }
+
+                case MouseButtons.Right:
+                    {
+                        labelBKColor.BackColor = labelColor.BackColor;
+                        //default color
+                        defaultBackColor = labelBKColor.BackColor;
+                        defaultBackColorIndex = (byte)labelColor.Tag;
+                        drawBackground(dataGridView1.CurrentCell.RowIndex);
+                        break;
+                    }
+            }
+            Debug.WriteLine(" = " + labelColor.BackColor);
+        }
+
+        private void drawBackground(int rowIndex)
+        {
+            if (dataGridView1.CurrentCell != null)
+            {
+                DataGridViewRow row = dataGridView1.Rows[rowIndex];
+                ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
+                scanlineInfo.backColor = defaultBackColor;                                                          
+                scanlineInfo.backColorIndex = defaultBackColorIndex;
+                dataGridView1.Rows[rowIndex].DefaultCellStyle.BackColor = scanlineInfo.backColor;
+            }
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.ControlKey)
+                erasure = true;
+        }
+
+        private void Form1_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.ControlKey)
+                erasure = false;
         }
     }
 }

@@ -34,6 +34,10 @@
             this.buttonNew = new System.Windows.Forms.Button();
             this.buttonSave = new System.Windows.Forms.Button();
             this.panelTools = new System.Windows.Forms.Panel();
+            this.labelSelectedCell = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.labelTotalHeight = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.labelCurrentLine = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.labelBK = new System.Windows.Forms.Label();
@@ -88,10 +92,8 @@
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
             this.panelLeft = new System.Windows.Forms.Panel();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.label2 = new System.Windows.Forms.Label();
-            this.labelTotalHeight = new System.Windows.Forms.Label();
             this.bufferedPanel1 = new PhotoShopColorSwatchLoader.BufferedPanel();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.panelTools.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panelLeft.SuspendLayout();
@@ -121,6 +123,8 @@
             // 
             // panelTools
             // 
+            this.panelTools.Controls.Add(this.labelSelectedCell);
+            this.panelTools.Controls.Add(this.label3);
             this.panelTools.Controls.Add(this.labelTotalHeight);
             this.panelTools.Controls.Add(this.label2);
             this.panelTools.Controls.Add(this.labelCurrentLine);
@@ -139,6 +143,42 @@
             this.panelTools.Name = "panelTools";
             this.panelTools.Size = new System.Drawing.Size(255, 251);
             this.panelTools.TabIndex = 3;
+            // 
+            // labelSelectedCell
+            // 
+            this.labelSelectedCell.AutoSize = true;
+            this.labelSelectedCell.Location = new System.Drawing.Point(97, 128);
+            this.labelSelectedCell.Name = "labelSelectedCell";
+            this.labelSelectedCell.Size = new System.Drawing.Size(13, 13);
+            this.labelSelectedCell.TabIndex = 19;
+            this.labelSelectedCell.Text = "0";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(19, 129);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(52, 13);
+            this.label3.TabIndex = 18;
+            this.label3.Text = "Selected:";
+            // 
+            // labelTotalHeight
+            // 
+            this.labelTotalHeight.AutoSize = true;
+            this.labelTotalHeight.Location = new System.Drawing.Point(94, 145);
+            this.labelTotalHeight.Name = "labelTotalHeight";
+            this.labelTotalHeight.Size = new System.Drawing.Size(13, 13);
+            this.labelTotalHeight.TabIndex = 17;
+            this.labelTotalHeight.Text = "0";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(16, 145);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(66, 13);
+            this.label2.TabIndex = 16;
+            this.label2.Text = "Total height:";
             // 
             // labelCurrentLine
             // 
@@ -320,9 +360,11 @@
             this.dataGridView1.Size = new System.Drawing.Size(985, 865);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseClick);
+            this.dataGridView1.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseEnter);
             this.dataGridView1.RowEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_RowEnter);
             this.dataGridView1.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_RowHeaderMouseDoubleClick);
             this.dataGridView1.RowHeightChanged += new System.Windows.Forms.DataGridViewRowEventHandler(this.dataGridView1_RowHeightChanged);
+            this.dataGridView1.RowLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_RowLeave);
             this.dataGridView1.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.dataGridView1_RowsAdded);
             this.dataGridView1.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.dataGridView1_RowsRemoved);
             this.dataGridView1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridView1_KeyDown);
@@ -541,33 +583,6 @@
             this.panelLeft.Size = new System.Drawing.Size(255, 865);
             this.panelLeft.TabIndex = 4;
             // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.dataGridView1);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(255, 0);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(985, 865);
-            this.panel1.TabIndex = 5;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(16, 145);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(66, 13);
-            this.label2.TabIndex = 16;
-            this.label2.Text = "Total height:";
-            // 
-            // labelTotalHeight
-            // 
-            this.labelTotalHeight.AutoSize = true;
-            this.labelTotalHeight.Location = new System.Drawing.Point(94, 145);
-            this.labelTotalHeight.Name = "labelTotalHeight";
-            this.labelTotalHeight.Size = new System.Drawing.Size(13, 13);
-            this.labelTotalHeight.TabIndex = 17;
-            this.labelTotalHeight.Text = "0";
-            // 
             // bufferedPanel1
             // 
             this.bufferedPanel1.BackColor = System.Drawing.SystemColors.ActiveCaption;
@@ -577,6 +592,15 @@
             this.bufferedPanel1.Size = new System.Drawing.Size(255, 614);
             this.bufferedPanel1.TabIndex = 13;
             this.bufferedPanel1.Paint += new System.Windows.Forms.PaintEventHandler(this.bufferedPanelColorPalette_Paint);
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.dataGridView1);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(255, 0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(985, 865);
+            this.panel1.TabIndex = 5;
             // 
             // Form1
             // 
@@ -661,6 +685,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelTotalHeight;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label labelSelectedCell;
+        private System.Windows.Forms.Label label3;
     }
 }
 

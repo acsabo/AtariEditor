@@ -19,7 +19,7 @@ namespace Atari2600Editor
         bool canDraw;
         Dictionary<Point, int> clickedCells = new Dictionary<Point, int>();
 
-        private const int ROW_HEIGHT = 4;
+        private const int ROW_HEIGHT = 16;
 
         private enum RowType { Asymmetric, Symmetric, Repeatable };
 
@@ -223,7 +223,13 @@ namespace Atari2600Editor
 
         private void buttonNew_Click(object sender, EventArgs e)
         {
-            clickedCells.Clear();
+            //dataGridView1.Rows.Clear();
+
+            if (dataGridView1.RowCount > 0)
+            {
+                for (int i = dataGridView1.RowCount - 1; i > 0; i--)
+                    dataGridView1.Rows.Remove(dataGridView1.Rows[i]);
+            }
 
             dataGridView1.DoubleBuffered(true);
             dataGridView1.Rows[0].Height = ROW_HEIGHT;
@@ -232,7 +238,19 @@ namespace Atari2600Editor
             addScanlineInfoTo(row);
             row.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
             row.HeaderCell.Value = "] {";
-            for (int l = 0; l < 192; l++)
+
+            int rows = 192;
+            if (rbSprite48.Checked)
+            {
+                rows = 47;
+
+                if (dataGridView1.Columns.Count < 41)
+                {
+                    for (int i = 41; i < 49; i++)
+                        dataGridView1.Columns.Add("col" + i, "" + i);
+                }
+            }
+            for (int l = 1; l < rows; l++)
             {
                 row = (DataGridViewRow)row.Clone();
                 addScanlineInfoTo(row);
@@ -254,49 +272,125 @@ namespace Atari2600Editor
 
         private void buttonSave_Click(object sender, EventArgs e)
         {
+            
+            if (rbPlayfied.Checked)
+            {
+                foreach (DataGridViewRow row in dataGridView1.Rows)
+                    savePlayfield(row);
+            } else            
+            if (rbSprite48.Checked)
+            {
+                saveSprite48();
+            }
+        }
+
+
+        private void saveSprite48()
+        {
+            string hexValue1 = "";
+            string hexValue2 = "";
+            string hexValue3 = "";
+            string hexValue4 = "";
+            string hexValue5 = "";
+            string hexValue6 = "";
+
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
                 ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
+
                 if (scanlineInfo != null)
                 {
-                    byte pf0 = extractPF0(row.Cells, 0, 3);
-
-                    //user 4 bits to store pattern type
-                    pf0 = (byte)(pf0 ^ (byte)scanlineInfo.type);
-                    byte pf1 = extractPF1(row.Cells, 4, 11);
-                    byte pf2 = extractPF2(row.Cells, 12, 19);
+                    byte b1 = extractByte(row.Cells, 0, 7);
+                    byte b2 = extractByte(row.Cells, 8, 15);
+                    byte b3 = extractByte(row.Cells, 16, 23);
+                    byte b4 = extractByte(row.Cells, 24, 31);
+                    byte b5 = extractByte(row.Cells, 32, 39);
+                    byte b6 = extractByte(row.Cells, 40, 47);
                     
-
                     byte bkColor = scanlineInfo.backColorIndex;
                     byte fgColor = scanlineInfo.frontColorIndex;
-                    byte height = scanlineInfo.repeat;
-                    string prefix = ".byte " +  ToHex(height) + "," + ToHex(bkColor) + "," + ToHex(fgColor);
+                    //byte height = scanlineInfo.repeat;
+                    // + ToHex(height) + "," + ToHex(bkColor) + "," + ToHex(fgColor);
 
                     // Convert integer 182 as a hex in a string variable
-                    string hexValue1 = "," + ToHex(pf0) + "," + ToHex(pf1) + "," + ToHex(pf2);
-                    //string binValue1 = ToBin(pf0) + "," + ToBin(pf1) + "," + ToBin(pf2) + ";";
-                    //string hexPlainValue1 = ToHex2(pf0) + "" + ToHex2(pf1) + "" + ToHex2(pf2) + "";
-
-                    //second half if needed
-                    if (RowType.Asymmetric == scanlineInfo.type)
-                    {
-                        pf0 = extractPF0(row.Cells, 20, 23);
-                        pf1 = extractPF1(row.Cells, 24, 31);
-                        pf2 = extractPF2(row.Cells, 32, 39);
-
-                        string hexValue2 = "," + ToHex(pf0) + "," + ToHex(pf1) + "," + ToHex(pf2);
-                        //string binValue2 = "," + ToBin(pf0) + "," + ToBin(pf1) + "," + ToBin(pf2) + ";";
-                        //string hexPlainValue2 = "" + ToHex2(pf0) + "" + ToHex2(pf1) + "" + ToHex2(pf2) + "";
-                        //Debug.WriteLine("hexValue = " + hexValue1 + hexValue2 + " --- binValue = " + binValue1 + binValue2 + "hexPlainValue = " + hexPlainValue1 + hexPlainValue2);
-                        hexValue1 += hexValue2;
-                    }
-
-                    //Debug.WriteLine("hexValue = " + hexValue1 + " --- binValue = " + binValue1 + "hexPlainValue = " + hexPlainValue1);
-                    Debug.WriteLine(prefix + hexValue1 + "; line #" + row.Index);
-                }
-
+                    hexValue1 = ToHex2(b1) + hexValue1;
+                    hexValue2 = ToHex2(b2) + hexValue2;
+                    hexValue3 = ToHex2(b3) + hexValue3;
+                    hexValue4 = ToHex2(b4) + hexValue4;
+                    hexValue5 = ToHex2(b5) + hexValue5;
+                    hexValue6 = ToHex2(b6) + hexValue6;
+                }                
             }
 
+            string prefix = "hex 00";
+            //Debug.WriteLine("hexValue = " + hexValue1 + " --- binValue = " + binValue1 + "hexPlainValue = " + hexPlainValue1);
+            Debug.WriteLine("Bitmap0\n\t" + prefix + hexValue1);
+            Debug.WriteLine("Bitmap1\n\t" + prefix + hexValue2);
+            Debug.WriteLine("Bitmap2\n\t" + prefix + hexValue3);
+
+            Debug.WriteLine("Bitmap3\n\t" + prefix + hexValue4);
+            Debug.WriteLine("Bitmap4\n\t" + prefix + hexValue5);
+            Debug.WriteLine("Bitmap5\n\t" + prefix + hexValue6);
+        }
+
+        private void savePlayfield(DataGridViewRow row)
+        {
+            ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
+            if (scanlineInfo != null)
+            {
+                byte pf0 = extractPF0(row.Cells, 0, 3);
+
+                //user 4 bits to store pattern type
+                pf0 = (byte)(pf0 ^ (byte)scanlineInfo.type);
+                byte pf1 = extractPF1(row.Cells, 4, 11);
+                byte pf2 = extractPF2(row.Cells, 12, 19);
+
+                byte bkColor = scanlineInfo.backColorIndex;
+                byte fgColor = scanlineInfo.frontColorIndex;
+                byte height = scanlineInfo.repeat;
+                string prefix = ".byte " + ToHex(height) + "," + ToHex(bkColor) + "," + ToHex(fgColor);
+
+                // Convert integer 182 as a hex in a string variable
+                string hexValue1 = "," + ToHex(pf0) + "," + ToHex(pf1) + "," + ToHex(pf2);
+                //string binValue1 = ToBin(pf0) + "," + ToBin(pf1) + "," + ToBin(pf2) + ";";
+                //string hexPlainValue1 = ToHex2(pf0) + "" + ToHex2(pf1) + "" + ToHex2(pf2) + "";
+
+                //second half if needed
+                if (RowType.Asymmetric == scanlineInfo.type)
+                {
+                    pf0 = extractPF0(row.Cells, 20, 23);
+                    pf1 = extractPF1(row.Cells, 24, 31);
+                    pf2 = extractPF2(row.Cells, 32, 39);
+
+                    string hexValue2 = "," + ToHex(pf0) + "," + ToHex(pf1) + "," + ToHex(pf2);
+                    //string binValue2 = "," + ToBin(pf0) + "," + ToBin(pf1) + "," + ToBin(pf2) + ";";
+                    //string hexPlainValue2 = "" + ToHex2(pf0) + "" + ToHex2(pf1) + "" + ToHex2(pf2) + "";
+                    //Debug.WriteLine("hexValue = " + hexValue1 + hexValue2 + " --- binValue = " + binValue1 + binValue2 + "hexPlainValue = " + hexPlainValue1 + hexPlainValue2);
+                    hexValue1 += hexValue2;
+                }
+
+                //Debug.WriteLine("hexValue = " + hexValue1 + " --- binValue = " + binValue1 + "hexPlainValue = " + hexPlainValue1);
+                Debug.WriteLine(prefix + hexValue1 + "; line #" + row.Index);
+            }
+        }
+
+        private byte extractByte(DataGridViewCellCollection cells, int v1, int v2)
+        {
+            byte data = 0;
+            string bits = "";
+            for (int i = v1; i <= v2; i++)
+            {
+                if (cells[i].Tag != null && ((int)cells[i].Tag == 1))
+                {
+                    bits += "1";
+                }
+                else
+                {
+                    bits += "0";
+                }
+            }
+            data = Convert.ToByte(bits, 2);
+            return data;
         }
 
         private byte extractPF0(DataGridViewCellCollection cells, int v1, int v2)

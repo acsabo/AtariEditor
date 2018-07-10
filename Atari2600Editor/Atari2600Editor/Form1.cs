@@ -19,7 +19,7 @@ namespace Atari2600Editor
         bool canDraw;
         Dictionary<Point, int> clickedCells = new Dictionary<Point, int>();
 
-        private const int ROW_HEIGHT = 16;
+        private int ROW_HEIGHT = 16;
 
         private enum RowType { Asymmetric, Symmetric, Repeatable };
 
@@ -223,33 +223,68 @@ namespace Atari2600Editor
 
         private void buttonNew_Click(object sender, EventArgs e)
         {
-            //dataGridView1.Rows.Clear();
-
-            if (dataGridView1.RowCount > 0)
+/*
+            TabPage myTabPage = new TabPage("aaa");
+            tabControl1.TabPages.Add(myTabPage);
+            DataGridView grid = new DataGridView();
+            myTabPage.Controls.Add(grid);
+*/         
+            while (dataGridView1.RowCount > 1)
             {
-                for (int i = dataGridView1.RowCount - 1; i > 0; i--)
-                    dataGridView1.Rows.Remove(dataGridView1.Rows[i]);
+                dataGridView1.Rows.RemoveAt(dataGridView1.RowCount-1);
             }
 
+            while (dataGridView1.Columns.Count > 1)
+            {
+                dataGridView1.Columns.RemoveAt(dataGridView1.Columns.Count - 1);
+            }
+            
+            int rows = 192;
+            ROW_HEIGHT = 10;
+            if (rbPlayfied.Checked)
+            {
+                rows = 96;
+                while (dataGridView1.Columns.Count < 40)
+                {
+                    dataGridView1.Columns.Add("col" + (dataGridView1.Columns.Count + 1), "" + (dataGridView1.Columns.Count + 1));
+                }
+            }
+            else
+            if (rbSprite48.Checked)
+            {
+                rows = 64;
+                while (dataGridView1.Columns.Count < 48)
+                {
+                    dataGridView1.Columns.Add("col" + (dataGridView1.Columns.Count + 1), "" + (dataGridView1.Columns.Count + 1));
+                }
+            }
+            else
+            if (rbSprite8.Checked)
+            {
+                ROW_HEIGHT = 20;
+                rows = 16;
+                while (dataGridView1.Columns.Count < 8)
+                {
+                    dataGridView1.Columns.Add("col" + (dataGridView1.Columns.Count + 1), "" + (dataGridView1.Columns.Count + 1));
+                }
+            }
+
+            for (int i = 0; i < dataGridView1.Columns.Count; i++)
+            {
+                dataGridView1.Columns[i].Width = 20;
+            }
+
+            //dataGridView1.sele
             dataGridView1.DoubleBuffered(true);
             dataGridView1.Rows[0].Height = ROW_HEIGHT;
+            addScanlineInfoTo(dataGridView1.Rows[0]);
 
             DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[0];
             addScanlineInfoTo(row);
             row.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
             row.HeaderCell.Value = "] {";
 
-            int rows = 192;
-            if (rbSprite48.Checked)
-            {
-                rows = 47;
 
-                if (dataGridView1.Columns.Count < 41)
-                {
-                    for (int i = 41; i < 49; i++)
-                        dataGridView1.Columns.Add("col" + i, "" + i);
-                }
-            }
             for (int l = 1; l < rows; l++)
             {
                 row = (DataGridViewRow)row.Clone();
@@ -262,12 +297,15 @@ namespace Atari2600Editor
         {
             //store line info
             ScanlineInfo scanLine = new ScanlineInfo();
-            scanLine.frontColor = Color.Empty;// Color.Red;
+            scanLine.frontColor = Color.Empty;
             scanLine.backColor = Color.Empty;
             scanLine.repeat = 1;
             scanLine.type = RowType.Asymmetric;
             row.Tag = scanLine;
             row.DefaultCellStyle.BackColor = scanLine.backColor;
+            row.Height = ROW_HEIGHT;
+            row.Cells[0].Tag = null;
+            row.Cells[0].Style.BackColor = Color.Empty;
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -282,8 +320,39 @@ namespace Atari2600Editor
             {
                 saveSprite48();
             }
+            else
+            if (rbSprite8.Checked)
+            {
+                saveSprite8();
+            }
         }
 
+        private void saveSprite8()
+        {
+            string hexValue1 = "";
+
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
+
+                if (scanlineInfo != null)
+                {
+                    byte b1 = extractByte(row.Cells, 0, 7);
+
+                    byte bkColor = scanlineInfo.backColorIndex;
+                    byte fgColor = scanlineInfo.frontColorIndex;
+                    //byte height = scanlineInfo.repeat;
+                    // + ToHex(height) + "," + ToHex(bkColor) + "," + ToHex(fgColor);
+
+                    // Convert integer 182 as a hex in a string variable
+                    hexValue1 = ToHex2(b1) + hexValue1;
+                }
+            }
+
+            string prefix = "hex 00";
+            //Debug.WriteLine("hexValue = " + hexValue1 + " --- binValue = " + binValue1 + "hexPlainValue = " + hexPlainValue1);
+            Debug.WriteLine("Bitmap0\n\t" + prefix + hexValue1);
+        }
 
         private void saveSprite48()
         {
@@ -484,38 +553,39 @@ namespace Atari2600Editor
                         cell.Style.BackColor = scanlineInfo.frontColor;
                     }
                 }
-
+                int mid = dataGridView1.ColumnCount / 2;
+                int max = dataGridView1.ColumnCount - 1;
                 switch (scanlineInfo.type)
                 {
                     case RowType.Asymmetric:
                         break;
                     case RowType.Repeatable:
-
-                        if (cell.ColumnIndex < 20)
+                        
+                        if (cell.ColumnIndex < mid)
                         {
-                            dataGridView1.Rows[cell.RowIndex].Cells[cell.ColumnIndex + 20].Tag = cell.Tag;
-                            dataGridView1.Rows[cell.RowIndex].Cells[cell.ColumnIndex + 20].Style.BackColor = cell.Style.BackColor;
+                            dataGridView1.Rows[cell.RowIndex].Cells[cell.ColumnIndex + mid].Tag = cell.Tag;
+                            dataGridView1.Rows[cell.RowIndex].Cells[cell.ColumnIndex + mid].Style.BackColor = cell.Style.BackColor;
                         }
                         else
-                        if (cell.ColumnIndex >= 20)
+                        if (cell.ColumnIndex >= mid)
                         {
-                            dataGridView1.Rows[cell.RowIndex].Cells[cell.ColumnIndex - 20].Tag = cell.Tag;
-                            dataGridView1.Rows[cell.RowIndex].Cells[cell.ColumnIndex - 20].Style.BackColor = cell.Style.BackColor;
+                            dataGridView1.Rows[cell.RowIndex].Cells[cell.ColumnIndex - mid].Tag = cell.Tag;
+                            dataGridView1.Rows[cell.RowIndex].Cells[cell.ColumnIndex - mid].Style.BackColor = cell.Style.BackColor;
                         }
 
                         break;
                     case RowType.Symmetric:
 
-                        if (cell.ColumnIndex < 20)
+                        if (cell.ColumnIndex < mid)
                         {
-                            dataGridView1.Rows[cell.RowIndex].Cells[39 - cell.ColumnIndex].Tag = cell.Tag;
-                            dataGridView1.Rows[cell.RowIndex].Cells[39 - cell.ColumnIndex].Style.BackColor = cell.Style.BackColor;
+                            dataGridView1.Rows[cell.RowIndex].Cells[max - cell.ColumnIndex].Tag = cell.Tag;
+                            dataGridView1.Rows[cell.RowIndex].Cells[max - cell.ColumnIndex].Style.BackColor = cell.Style.BackColor;
                         }
                         else
-                        if (cell.ColumnIndex >= 20)
+                        if (cell.ColumnIndex >= mid)
                         {
-                            dataGridView1.Rows[cell.RowIndex].Cells[39-cell.ColumnIndex].Tag = cell.Tag;
-                            dataGridView1.Rows[cell.RowIndex].Cells[39-cell.ColumnIndex].Style.BackColor = cell.Style.BackColor;
+                            dataGridView1.Rows[cell.RowIndex].Cells[max-cell.ColumnIndex].Tag = cell.Tag;
+                            dataGridView1.Rows[cell.RowIndex].Cells[max-cell.ColumnIndex].Style.BackColor = cell.Style.BackColor;
                         }
 
                         break;
@@ -539,7 +609,6 @@ namespace Atari2600Editor
                 }
 
             }
-            //dataGridView1.ClearSelection();
         }
 
         private void dataGridView1_MouseMove(object sender, MouseEventArgs e)
@@ -571,7 +640,6 @@ namespace Atari2600Editor
         private void dataGridView1_MouseUp(object sender, MouseEventArgs e)
         {
             canDraw = false;
-
             //do not remove
             dataGridView1.ClearSelection();
         }
@@ -587,7 +655,6 @@ namespace Atari2600Editor
             if (e.KeyChar == '-')
             {
                 DataGridViewRow row = (DataGridViewRow)dataGridView1.CurrentRow;
-                //dataGridView1.Rows.Remove(row);
                 int count = row.Index;
                 dataGridView1.Rows.RemoveAt(count);
             }
@@ -603,7 +670,6 @@ namespace Atari2600Editor
 
         private void dataGridView1_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            //dataGridView1.ClearSelection();
             DataGridViewRow row = dataGridView1.Rows[dataGridView1.CurrentCell.RowIndex];
             ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
             scanlineInfo.type++;
@@ -811,7 +877,7 @@ namespace Atari2600Editor
         private void dataGridView1_RowEnter(object sender, DataGridViewCellEventArgs e)
         {
             labelCurrentLine.Text = ""+ (1 + e.RowIndex);
-            DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[e.RowIndex];
+            DataGridViewRow row = ((DataGridView)sender).Rows[e.RowIndex];
             ScanlineInfo scanlineInfo = (ScanlineInfo)row.Tag;
             
             labelFGColor.BackColor = scanlineInfo.frontColor;
@@ -876,8 +942,9 @@ namespace Atari2600Editor
 
         private void dataGridView1_RowLeave(object sender, DataGridViewCellEventArgs e)
         {
-            DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[e.RowIndex];
+            DataGridViewRow row = ((DataGridView)sender).Rows[e.RowIndex];
             row.HeaderCell.Style.BackColor = Color.WhiteSmoke;// scanlineInfo.frontColor;
         }
+
     }
 }
